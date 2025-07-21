@@ -2,7 +2,8 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Cronômetro Estilo iOS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cronômetro Responsivo</title>
   <style>
     * {
       box-sizing: border-box;
@@ -12,58 +13,81 @@
       margin: 0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background: linear-gradient(180deg, #1c1c1e, #2c2c2e);
-      color: #fff;
+      color: white;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
+      justify-content: flex-start;
       height: 100vh;
-      overflow: hidden;
       user-select: none;
+      padding: 20px;
     }
 
     #timer {
-      font-size: 4em;
+      font-size: 60px;
+      font-weight: bold;
+      margin-top: 40px;
       margin-bottom: 20px;
-      color: white;
+      text-align: center;
+    }
+
+    .btn-large {
+      font-size: 20px;
+      padding: 14px 28px;
+      border: none;
+      border-radius: 12px;
+      margin: 10px;
+      width: 90%;
+      max-width: 400px;
+      cursor: pointer;
       font-weight: 600;
+    }
+
+    .pause-btn {
+      background-color: #ff9f0a;
+      color: white;
     }
 
     .glass-card {
       background: rgba(255, 255, 255, 0.08);
       backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
       border-radius: 16px;
       padding: 16px;
-      overflow-y: auto;
-      max-height: 60vh;
-      box-shadow: 0 4px 30px rgba(0,0,0,0.1);
-      font-size: 14px;
+      margin-top: 20px;
+      width: 100%;
+      max-width: 400px;
+      font-size: 18px;
     }
 
-    #marks {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      width: 240px;
+    .mark {
+      margin-left: 10px;
+      font-size: 16px;
     }
 
-    #history {
-      position: absolute;
-      bottom: 20px;
-      left: 20px;
-      width: 320px;
+    #pauseDialog {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(28,28,30,0.95);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
+      padding: 24px;
+      display: none;
+      text-align: center;
+      z-index: 10;
+      width: 90%;
+      max-width: 350px;
     }
 
     .btn {
       padding: 10px 16px;
-      margin: 5px;
+      margin: 6px;
       border: none;
       border-radius: 12px;
-      font-size: 14px;
+      font-size: 16px;
       font-weight: 600;
       cursor: pointer;
-      transition: background 0.3s ease;
     }
 
     .continue-btn {
@@ -79,64 +103,39 @@
     .delete-single-btn {
       background-color: #ff9500;
       color: white;
-      margin-left: 8px;
       font-size: 12px;
       padding: 4px 8px;
-    }
-
-    #pauseDialog {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(28,28,30,0.95);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 16px;
-      padding: 24px;
-      display: none;
-      text-align: center;
-      z-index: 10;
-      min-width: 280px;
+      border-radius: 8px;
+      margin-left: 8px;
     }
 
     .session-block {
-      border-bottom: 1px solid rgba(255,255,255,0.1);
-      margin-bottom: 8px;
-      padding-bottom: 6px;
+      margin-bottom: 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.2);
     }
 
     .session-header {
+      font-size: 16px;
       font-weight: bold;
-      font-size: 13px;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
-
-    .mark {
-      font-size: 13px;
-      margin-left: 10px;
-      color: #ccc;
-    }
-
-    @media (max-width: 768px) {
-      #marks, #history {
-        position: static;
-        width: 90%;
-        margin: 10px auto;
-      }
-
-      #pauseDialog {
-        width: 90%;
-      }
-    }
   </style>
 </head>
 <body>
+
   <div id="timer">00:00.000</div>
 
-  <div id="marks" class="glass-card"><strong>Marcações:</strong><br></div>
-  <div id="history" class="glass-card"><strong>Histórico:</strong><br></div>
+  <button class="btn-large pause-btn" onclick="manualPause()">⏸ Pausar Cronômetro</button>
+
+  <div id="marks" class="glass-card">
+    <strong>Marcações:</strong><br>
+  </div>
+
+  <div id="history" class="glass-card">
+    <strong>Histórico:</strong><br>
+  </div>
 
   <div id="pauseDialog">
     <p style="margin-bottom: 12px;">Cronômetro pausado. O que deseja fazer?</p>
@@ -238,8 +237,8 @@
       allSessions.forEach((session, i) => {
         el.innerHTML += `<div class="session-block">
           <div class="session-header">
-            <span>Cronômetro ${i + 1} - ${session.date}</span>
-            <button class="btn delete-single-btn" onclick="deleteSession(${i})">✕</button>
+            <span>Cronômetro ${i + 1}<br>${session.date}</span>
+            <button class="delete-single-btn" onclick="deleteSession(${i})">✕</button>
           </div>`;
         session.marks.forEach((mark, j) => {
           el.innerHTML += `<div class="mark">#${j + 1}: ${formatTime(mark.time)} (+${formatTime(mark.diff)})</div>`;
@@ -248,6 +247,7 @@
       });
     }
 
+    // Suporte a clique e segurar também
     document.body.addEventListener("mousedown", () => {
       longPressTimer = setTimeout(() => {
         if (isRunning) {
@@ -262,8 +262,16 @@
       clearTimeout(longPressTimer);
     });
 
-    document.body.addEventListener("click", () => {
-      if (document.getElementById("pauseDialog").style.display === "block") return;
+    function manualPause() {
+      if (isRunning) {
+        stopTimer();
+        saveToHistory();
+        document.getElementById("pauseDialog").style.display = "block";
+      }
+    }
+
+    document.body.addEventListener("click", (e) => {
+      if (e.target.closest("#pauseDialog") || e.target.closest("button")) return;
 
       if (!isRunning) {
         startTimer();
@@ -272,7 +280,7 @@
       }
     });
 
-    // Inicializa histórico ao carregar
+    // Inicia histórico salvo
     updateHistoryDisplay();
   </script>
 </body>
