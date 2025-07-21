@@ -11,6 +11,7 @@
       --card: rgba(0, 0, 0, 0.05);
       --button-bg: #000;
       --button-text: #fff;
+      --highlight: #555;
     }
 
     .dark {
@@ -19,6 +20,11 @@
       --card: rgba(255, 255, 255, 0.08);
       --button-bg: #fff;
       --button-text: #000;
+      --highlight: #ccc;
+    }
+
+    html {
+      background-color: var(--bg);
     }
 
     html, body {
@@ -33,30 +39,12 @@
       align-items: center;
       justify-content: center;
       touch-action: manipulation;
-      overflow: hidden;
-    }
-
-    #summary {
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      background: var(--card);
-      padding: 10px 12px;
-      border-radius: 8px;
-      font-size: 3.6vw;
-      color: #333;
-      max-width: 240px;
-    }
-
-    .dark #summary {
-      color: #ccc;
     }
 
     #timer {
       font-size: 18vw;
       font-weight: 600;
       margin-bottom: 40px;
-      cursor: pointer;
     }
 
     #marks {
@@ -72,6 +60,16 @@
       min-width: 110px;
     }
 
+    #averageStats {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background: transparent;
+      font-size: 3.5vw;
+      color: var(--highlight);
+      font-weight: 500;
+    }
+
     #history {
       position: absolute;
       bottom: 20px;
@@ -83,7 +81,16 @@
       max-height: 30vh;
       overflow-y: auto;
       min-width: 140px;
+    }
+
+    .history-entry {
       cursor: pointer;
+      margin-bottom: 6px;
+    }
+
+    .hidden-marks {
+      display: none;
+      margin-left: 10px;
     }
 
     #pauseButton, #themeButton {
@@ -148,8 +155,8 @@
   </style>
 </head>
 <body>
-  <div id="summary"></div>
-  <div id="timer">00:00.000</div>
+  <div id="timer">00:00:00</div>
+  <div id="averageStats"></div>
   <div id="marks"></div>
   <div id="history"><strong>Histórico:</strong><br></div>
   <button id="pauseButton" onclick="pause()">Pausar</button>
@@ -168,21 +175,15 @@
     const timerEl = document.getElementById("timer");
     const marksEl = document.getElementById("marks");
     const historyEl = document.getElementById("history");
+    const averageStatsEl = document.getElementById("averageStats");
     const themeButton = document.getElementById("themeButton");
 
     function formatTime(ms) {
-      const min = String(Math.floor(ms / 60000)).padStart(2, '0');
-      const sec = String(Math.floor((ms % 60000) / 1000)).padStart(2, '0');
-      const msStr = String(ms % 1000).padStart(3, '0');
-      return `${min}:${sec}.${msStr}`;
-    }
-
-    function formatHMSTime(ms) {
-      const hours = Math.floor(ms / 3600000);
-      const minutes = Math.floor((ms % 3600000) / 60000);
-      const seconds = Math.floor((ms % 60000) / 1000);
-      const centiseconds = Math.floor((ms % 1000) / 10);
-      return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${String(centiseconds).padStart(2, '0')}`;
+      const totalSeconds = Math.floor(ms / 1000);
+      const hrs = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
+      const min = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
+      const sec = String(totalSeconds % 60).padStart(2, '0');
+      return `${hrs}:${min}:${sec}`;
     }
 
     function updateTimer() {
@@ -192,50 +193,52 @@
 
     function updateMarksDisplay() {
       marksEl.innerHTML = "<strong>Marcações:</strong><br>";
-      let total = 0;
-      const diffs = marks.map(m => m.diff).slice(1); // ignora o primeiro 0
+      let total = 0, max = 0, min = Infinity;
 
       [...marks].reverse().forEach((m, i) => {
-        total += m.diff;
-        marksEl.innerHTML += `#${marks.length - i}: ${formatTime(m.time)}<br>+${formatTime(m.diff)}<br>`;
+        if (i > 0) {
+          total += m.diff;
+          max = Math.max(max, m.diff);
+          min = Math.min(min, m.diff);
+        }
+        marksEl.innerHTML += `#${marks.length - i}: ${formatTime(m.time)}<br>${i > 0 ? '+' + formatTime(m.diff) : ''}<br>`;
       });
 
-      if (diffs.length > 0) {
-        const avg = diffs.reduce((a, b) => a + b, 0) / diffs.length;
-        const min = Math.min(...diffs);
-        const max = Math.max(...diffs);
-        document.getElementById("summary").innerHTML = `
-          <strong>Média:</strong> ${formatHMSTime(avg)}<br>
-          <strong>Menor:</strong> ${formatHMSTime(min)}<br>
-          <strong>Maior:</strong> ${formatHMSTime(max)}
-        `;
+      if (marks.length > 1) {
+        const avg = total / (marks.length - 1);
+        averageStatsEl.innerHTML = `Média: ${formatTime(avg)}<br>Maior: ${formatTime(max)}<br>Menor: ${formatTime(min)}`;
       } else {
-        document.getElementById("summary").innerHTML = "";
+        averageStatsEl.innerHTML = "";
       }
     }
 
     function updateHistoryDisplay() {
       historyEl.innerHTML = "<strong>Histórico:</strong><br>";
       history.forEach((s, i) => {
-        const item = document.createElement("div");
-        item.innerHTML = `⏱ ${s.date}<br>`;
-        item.style.cursor = "pointer";
-        item.onclick = () => {
-          if (confirm(`Deseja continuar o cronômetro de: ${s.date}?`)) {
+        const entry = document.createElement("div");
+        entry.className = "history-entry";
+        entry.innerHTML = `⏱ ${s.date}`;
+        entry.onclick = () => {
+          const confirmRestore = confirm("Deseja restaurar este histórico?");
+          if (confirmRestore) {
             restoreSession(s);
+          } else {
+            const details = entry.querySelector(".hidden-marks");
+            if (details) {
+              details.style.display = details.style.display === "none" ? "block" : "none";
+            }
           }
         };
-        historyEl.appendChild(item);
-      });
-    }
 
-    function restoreSession(session) {
-      marks = [...session.marks];
-      currentSession = { ...session };
-      lastClickTime = marks.length ? marks[marks.length - 1].time : null;
-      updateMarksDisplay();
-      timerEl.textContent = formatTime(lastClickTime || 0);
-      isRunning = false;
+        const markDetails = document.createElement("div");
+        markDetails.className = "hidden-marks";
+        s.marks.forEach((m, j) => {
+          markDetails.innerHTML += `&nbsp;&nbsp;#${j + 1}: ${formatTime(m.time)}<br>`;
+        });
+
+        entry.appendChild(markDetails);
+        historyEl.appendChild(entry);
+      });
     }
 
     function startTimer() {
@@ -243,7 +246,7 @@
       isRunning = true;
       marks = [];
       lastClickTime = null;
-      interval = setInterval(updateTimer, 10);
+      interval = setInterval(updateTimer, 1000);
       currentSession = { date: new Date().toLocaleString(), marks: [] };
     }
 
@@ -282,15 +285,15 @@
       hidePauseDialog();
       startTime = Date.now() - lastClickTime;
       isRunning = true;
-      interval = setInterval(updateTimer, 10);
+      interval = setInterval(updateTimer, 1000);
     }
 
     function deleteTimer() {
       stopTimer();
       hidePauseDialog();
-      timerEl.textContent = "00:00.000";
+      timerEl.textContent = "00:00:00";
       marksEl.innerHTML = "";
-      document.getElementById("summary").innerHTML = "";
+      averageStatsEl.innerHTML = "";
       currentSession = null;
     }
 
@@ -308,24 +311,18 @@
       themeButton.textContent = isDark ? "Light" : "Dark";
     }
 
+    function restoreSession(session) {
+      deleteTimer();
+      startTime = Date.now();
+      isRunning = true;
+      lastClickTime = session.marks[session.marks.length - 1]?.time || 0;
+      interval = setInterval(updateTimer, 1000);
+      marks = [...session.marks];
+      currentSession = { ...session };
+      updateMarksDisplay();
+    }
+
     updateHistoryDisplay();
-
-    document.body.addEventListener("click", (e) => {
-      if (
-        e.target.closest("#pauseDialog") ||
-        e.target.id === "pauseButton" ||
-        e.target.id === "themeButton" ||
-        e.target.closest("#history")
-      ) return;
-
-      if (e.target.id === "timer") {
-        if (!isRunning) {
-          startTimer();
-        } else {
-          recordMark();
-        }
-      }
-    });
 
     document.body.addEventListener("touchstart", () => {
       longPressTimer = setTimeout(() => {
@@ -335,6 +332,19 @@
 
     document.body.addEventListener("touchend", () => {
       clearTimeout(longPressTimer);
+    });
+
+    document.body.addEventListener("click", (e) => {
+      const t = e.target;
+      if (t.closest("#pauseDialog") || t.id === "pauseButton" || t.id === "themeButton" || t.closest("#history") || t.closest("#marks") || t.closest("#averageStats")) return;
+
+      if (t.id === "timer") {
+        if (!isRunning) {
+          startTimer();
+        } else {
+          recordMark();
+        }
+      }
     });
   </script>
 </body>
