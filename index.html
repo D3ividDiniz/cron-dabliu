@@ -2,85 +2,101 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Cronômetro com Histórico</title>
+  <title>Cronômetro Estilo iOS</title>
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
-      font-family: Arial, sans-serif;
-      background: #111;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: linear-gradient(180deg, #1c1c1e, #2c2c2e);
       color: #fff;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       height: 100vh;
+      overflow: hidden;
       user-select: none;
     }
 
     #timer {
       font-size: 4em;
       margin-bottom: 20px;
+      color: white;
+      font-weight: 600;
     }
 
-    #marks, #history {
-      position: absolute;
+    .glass-card {
       background: rgba(255, 255, 255, 0.08);
-      padding: 10px;
-      border-radius: 6px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-radius: 16px;
+      padding: 16px;
       overflow-y: auto;
+      max-height: 60vh;
+      box-shadow: 0 4px 30px rgba(0,0,0,0.1);
       font-size: 14px;
     }
 
     #marks {
+      position: absolute;
       top: 20px;
       right: 20px;
-      max-height: 70vh;
-      width: 220px;
+      width: 240px;
     }
 
     #history {
+      position: absolute;
       bottom: 20px;
       left: 20px;
-      max-height: 60vh;
-      width: 280px;
+      width: 320px;
     }
 
     .btn {
-      padding: 6px 12px;
-      margin-top: 5px;
+      padding: 10px 16px;
+      margin: 5px;
       border: none;
-      border-radius: 4px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
       cursor: pointer;
-      font-size: 12px;
+      transition: background 0.3s ease;
     }
 
     .continue-btn {
-      background-color: #4caf50;
+      background-color: #34c759;
       color: white;
     }
 
     .delete-btn {
-      background-color: #f44336;
+      background-color: #ff3b30;
       color: white;
     }
 
     .delete-single-btn {
-      background-color: #ff5722;
+      background-color: #ff9500;
       color: white;
-      margin-left: 10px;
+      margin-left: 8px;
+      font-size: 12px;
+      padding: 4px 8px;
     }
 
     #pauseDialog {
       position: fixed;
-      top: 40%;
+      top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      background: #222;
-      padding: 20px;
-      border-radius: 8px;
-      border: 1px solid #555;
+      background: rgba(28,28,30,0.95);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
+      padding: 24px;
       display: none;
+      text-align: center;
       z-index: 10;
+      min-width: 280px;
     }
 
     .session-block {
@@ -92,24 +108,38 @@
     .session-header {
       font-weight: bold;
       font-size: 13px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
 
     .mark {
-      font-size: 12px;
+      font-size: 13px;
       margin-left: 10px;
+      color: #ccc;
     }
 
-    .scrollable {
-      overflow-y: auto;
+    @media (max-width: 768px) {
+      #marks, #history {
+        position: static;
+        width: 90%;
+        margin: 10px auto;
+      }
+
+      #pauseDialog {
+        width: 90%;
+      }
     }
   </style>
 </head>
 <body>
   <div id="timer">00:00.000</div>
-  <div id="marks"><strong>Marcações:</strong><br></div>
-  <div id="history"><strong>Histórico:</strong><br></div>
+
+  <div id="marks" class="glass-card"><strong>Marcações:</strong><br></div>
+  <div id="history" class="glass-card"><strong>Histórico:</strong><br></div>
+
   <div id="pauseDialog">
-    <p>Cronômetro pausado. O que deseja fazer?</p>
+    <p style="margin-bottom: 12px;">Cronômetro pausado. O que deseja fazer?</p>
     <button class="btn continue-btn" onclick="resumeTimer()">Continuar</button>
     <button class="btn delete-btn" onclick="deleteTimer()">Excluir</button>
   </div>
@@ -121,7 +151,6 @@
     let marks = [];
     let lastClickTime = null;
     let longPressTimer;
-    let currentSession = null;
     let currentStartTimestamp = null;
 
     function formatTime(ms) {
@@ -166,7 +195,6 @@
     function stopTimer() {
       isRunning = false;
       clearInterval(interval);
-      updateTimer();
     }
 
     function resumeTimer() {
@@ -178,10 +206,12 @@
 
     function deleteTimer() {
       stopTimer();
-      document.getElementById("pauseDialog").style.display = "none";
+      marks = [];
+      startTime = null;
+      lastClickTime = null;
       document.getElementById("timer").textContent = "00:00.000";
       document.getElementById("marks").innerHTML = "<strong>Marcações:</strong><br>";
-      marks = [];
+      document.getElementById("pauseDialog").style.display = "none";
     }
 
     function saveToHistory() {
@@ -207,8 +237,10 @@
       const allSessions = JSON.parse(localStorage.getItem("cronometros") || "[]");
       allSessions.forEach((session, i) => {
         el.innerHTML += `<div class="session-block">
-          <div class="session-header">Cronômetro ${i + 1} - ${session.date}
-          <button class="btn delete-single-btn" onclick="deleteSession(${i})">Excluir</button></div>`;
+          <div class="session-header">
+            <span>Cronômetro ${i + 1} - ${session.date}</span>
+            <button class="btn delete-single-btn" onclick="deleteSession(${i})">✕</button>
+          </div>`;
         session.marks.forEach((mark, j) => {
           el.innerHTML += `<div class="mark">#${j + 1}: ${formatTime(mark.time)} (+${formatTime(mark.diff)})</div>`;
         });
@@ -240,7 +272,7 @@
       }
     });
 
-    // Carrega histórico ao iniciar
+    // Inicializa histórico ao carregar
     updateHistoryDisplay();
   </script>
 </body>
