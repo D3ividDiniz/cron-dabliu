@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Cronômetro com Histórico</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      user-select: none;
+    }
+
+    #timer {
+      font-size: 4em;
+      margin-bottom: 20px;
+    }
+
+    #marks, #history {
+      position: absolute;
+      background: rgba(255, 255, 255, 0.08);
+      padding: 10px;
+      border-radius: 6px;
+      overflow-y: auto;
+      font-size: 14px;
+    }
+
+    #marks {
+      top: 20px;
+      right: 20px;
+      max-height: 70vh;
+      width: 220px;
+    }
+
+    #history {
+      bottom: 20px;
+      left: 20px;
+      max-height: 60vh;
+      width: 280px;
+    }
+
+    .btn {
+      padding: 6px 12px;
+      margin-top: 5px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .continue-btn {
+      background-color: #4caf50;
+      color: white;
+    }
+
+    .delete-btn {
+      background-color: #f44336;
+      color: white;
+    }
+
+    .delete-single-btn {
+      background-color: #ff5722;
+      color: white;
+      margin-left: 10px;
+    }
+
+    #pauseDialog {
+      position: fixed;
+      top: 40%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #222;
+      padding: 20px;
+      border-radius: 8px;
+      border: 1px solid #555;
+      display: none;
+      z-index: 10;
+    }
+
+    .session-block {
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      margin-bottom: 8px;
+      padding-bottom: 6px;
+    }
+
+    .session-header {
+      font-weight: bold;
+      font-size: 13px;
+    }
+
+    .mark {
+      font-size: 12px;
+      margin-left: 10px;
+    }
+
+    .scrollable {
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+  <div id="timer">00:00.000</div>
+  <div id="marks"><strong>Marcações:</strong><br></div>
+  <div id="history"><strong>Histórico:</strong><br></div>
+  <div id="pauseDialog">
+    <p>Cronômetro pausado. O que deseja fazer?</p>
+    <button class="btn continue-btn" onclick="resumeTimer()">Continuar</button>
+    <button class="btn delete-btn" onclick="deleteTimer()">Excluir</button>
+  </div>
+
+  <script>
+    let startTime = null;
+    let isRunning = false;
+    let interval = null;
+    let marks = [];
+    let lastClickTime = null;
+    let longPressTimer;
+    let currentSession = null;
+    let currentStartTimestamp = null;
+
+    function formatTime(ms) {
+      const minutes = String(Math.floor(ms / 60000)).padStart(2, '0');
+      const seconds = String(Math.floor((ms % 60000) / 1000)).padStart(2, '0');
+      const milliseconds = String(ms % 1000).padStart(3, '0');
+      return `${minutes}:${seconds}.${milliseconds}`;
+    }
+
+    function updateTimer() {
+      const now = Date.now();
+      const elapsed = now - startTime;
+      document.getElementById("timer").textContent = formatTime(elapsed);
+    }
+
+    function recordMark() {
+      const now = Date.now();
+      const elapsed = now - startTime;
+      const diff = lastClickTime !== null ? elapsed - lastClickTime : 0;
+      lastClickTime = elapsed;
+      marks.push({ time: elapsed, diff });
+      updateMarksDisplay();
+    }
+
+    function updateMarksDisplay() {
+      const el = document.getElementById("marks");
+      el.innerHTML = "<strong>Marcações:</strong><br>";
+      marks.forEach((mark, i) => {
+        el.innerHTML += `#${i + 1}: ${formatTime(mark.time)} (+${formatTime(mark.diff)})<br>`;
+      });
+    }
+
+    function startTimer() {
+      startTime = Date.now();
+      currentStartTimestamp = new Date().toISOString();
+      isRunning = true;
+      marks = [];
+      lastClickTime = null;
+      interval = setInterval(updateTimer, 10);
+    }
+
+    function stopTimer() {
+      isRunning = false;
+      clearInterval(interval);
+      updateTimer();
+    }
+
+    function resumeTimer() {
+      document.getElementById("pauseDialog").style.display = "none";
+      startTime = Date.now() - lastClickTime;
+      isRunning = true;
+      interval = setInterval(updateTimer, 10);
+    }
+
+    function deleteTimer() {
+      stopTimer();
+      document.getElementById("pauseDialog").style.display = "none";
+      document.getElementById("timer").textContent = "00:00.000";
+      document.getElementById("marks").innerHTML = "<strong>Marcações:</strong><br>";
+      marks = [];
+    }
+
+    function saveToHistory() {
+      const allSessions = JSON.parse(localStorage.getItem("cronometros") || "[]");
+      allSessions.push({
+        date: new Date(currentStartTimestamp).toLocaleString(),
+        marks: marks
+      });
+      localStorage.setItem("cronometros", JSON.stringify(allSessions));
+      updateHistoryDisplay();
+    }
+
+    function deleteSession(index) {
+      const allSessions = JSON.parse(localStorage.getItem("cronometros") || "[]");
+      allSessions.splice(index, 1);
+      localStorage.setItem("cronometros", JSON.stringify(allSessions));
+      updateHistoryDisplay();
+    }
+
+    function updateHistoryDisplay() {
+      const el = document.getElementById("history");
+      el.innerHTML = "<strong>Histórico:</strong><br>";
+      const allSessions = JSON.parse(localStorage.getItem("cronometros") || "[]");
+      allSessions.forEach((session, i) => {
+        el.innerHTML += `<div class="session-block">
+          <div class="session-header">Cronômetro ${i + 1} - ${session.date}
+          <button class="btn delete-single-btn" onclick="deleteSession(${i})">Excluir</button></div>`;
+        session.marks.forEach((mark, j) => {
+          el.innerHTML += `<div class="mark">#${j + 1}: ${formatTime(mark.time)} (+${formatTime(mark.diff)})</div>`;
+        });
+        el.innerHTML += `</div>`;
+      });
+    }
+
+    document.body.addEventListener("mousedown", () => {
+      longPressTimer = setTimeout(() => {
+        if (isRunning) {
+          stopTimer();
+          saveToHistory();
+          document.getElementById("pauseDialog").style.display = "block";
+        }
+      }, 800);
+    });
+
+    document.body.addEventListener("mouseup", () => {
+      clearTimeout(longPressTimer);
+    });
+
+    document.body.addEventListener("click", () => {
+      if (document.getElementById("pauseDialog").style.display === "block") return;
+
+      if (!isRunning) {
+        startTimer();
+      } else {
+        recordMark();
+      }
+    });
+
+    // Carrega histórico ao iniciar
+    updateHistoryDisplay();
+  </script>
+</body>
+</html>
