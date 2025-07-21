@@ -53,7 +53,7 @@
       font-size: 3.2vw;
       max-height: 40vh;
       overflow-y: auto;
-      min-width: 110px;
+      min-width: 120px;
     }
 
     #history {
@@ -78,7 +78,6 @@
       border-radius: 30px;
       cursor: pointer;
       opacity: 0.85;
-      transition: background 0.2s;
       background: var(--button-bg);
       color: var(--button-text);
     }
@@ -128,6 +127,19 @@
       background-color: #ff3b30;
       color: white;
     }
+
+    .history-item {
+      cursor: pointer;
+      margin-bottom: 8px;
+    }
+
+    .history-details {
+      display: none;
+      font-size: 2.5vw;
+      margin-top: 4px;
+      margin-left: 8px;
+    }
+
   </style>
 </head>
 <body>
@@ -171,9 +183,9 @@
     function updateMarksDisplay() {
       marksEl.innerHTML = "<strong>Marcações:</strong><br>";
       let total = 0;
-      marks.forEach((m, i) => {
+      [...marks].reverse().forEach((m, i) => {
         total += m.diff;
-        marksEl.innerHTML += `#${i + 1}: ${formatTime(m.time)}<br>+${formatTime(m.diff)}<br>`;
+        marksEl.innerHTML += `#${marks.length - i}: ${formatTime(m.time)}<br>+${formatTime(m.diff)}<br>`;
       });
       if (marks.length > 1) {
         const avg = total / (marks.length - 1);
@@ -184,19 +196,29 @@
     function updateHistoryDisplay() {
       historyEl.innerHTML = "<strong>Histórico:</strong><br>";
       history.forEach((s, i) => {
-        const div = document.createElement("div");
-        div.style.cursor = "pointer";
-        div.innerHTML = `⏱ ${s.date}<br>`;
+        const item = document.createElement("div");
+        item.className = "history-item";
+        item.innerHTML = `⏱ ${s.date}`;
+
+        const details = document.createElement("div");
+        details.className = "history-details";
+
         s.marks.forEach((m, j) => {
-          div.innerHTML += `&nbsp;&nbsp;#${j + 1}: ${formatTime(m.time)}<br>`;
+          details.innerHTML += `#${j + 1}: ${formatTime(m.time)}<br>`;
         });
-        div.addEventListener("click", () => {
+
+        item.appendChild(details);
+
+        item.addEventListener("click", () => {
           const confirmLoad = confirm("Deseja continuar a partir deste histórico?");
           if (confirmLoad) {
             loadFromHistory(s);
+          } else {
+            details.style.display = details.style.display === "block" ? "none" : "block";
           }
         });
-        historyEl.appendChild(div);
+
+        historyEl.appendChild(item);
       });
     }
 
