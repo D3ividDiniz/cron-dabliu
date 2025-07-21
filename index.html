@@ -1,16 +1,32 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Cronômetro Moderno</title>
   <style>
+    :root {
+      --bg: #f8f8f8;
+      --text: #222;
+      --card: rgba(0, 0, 0, 0.05);
+      --button-bg: #000;
+      --button-text: #fff;
+    }
+
+    .dark {
+      --bg: #111;
+      --text: #f2f2f2;
+      --card: rgba(255, 255, 255, 0.08);
+      --button-bg: #fff;
+      --button-text: #000;
+    }
+
     html, body {
       margin: 0;
       padding: 0;
       height: 100%;
-      background-color: #f8f8f8;
-      color: #222;
+      background-color: var(--bg);
+      color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       display: flex;
       flex-direction: column;
@@ -20,7 +36,7 @@
     }
 
     #timer {
-      font-size: 10vw;
+      font-size: 18vw;
       font-weight: 600;
       margin-bottom: 40px;
     }
@@ -29,20 +45,20 @@
       position: absolute;
       top: 20px;
       right: 20px;
-      background: rgba(0, 0, 0, 0.05);
+      background: var(--card);
       padding: 8px 10px;
       border-radius: 8px;
-      font-size: 3vw;
+      font-size: 3.2vw;
       max-height: 40vh;
       overflow-y: auto;
-      min-width: 100px;
+      min-width: 110px;
     }
 
     #history {
       position: absolute;
       bottom: 20px;
       left: 20px;
-      background: rgba(0, 0, 0, 0.05);
+      background: var(--card);
       padding: 8px 10px;
       border-radius: 8px;
       font-size: 2.8vw;
@@ -51,22 +67,30 @@
       min-width: 140px;
     }
 
-    #pauseButton {
+    #pauseButton, #themeButton {
       position: fixed;
       bottom: 40px;
-      background: #000;
-      color: white;
-      font-size: 5vw;
+      font-size: 4.8vw;
       border: none;
       padding: 12px 24px;
       border-radius: 30px;
       cursor: pointer;
-      opacity: 0.8;
+      opacity: 0.85;
       transition: background 0.2s;
+      background: var(--button-bg);
+      color: var(--button-text);
     }
 
-    #pauseButton:hover {
-      background: #222;
+    #pauseButton:hover, #themeButton:hover {
+      opacity: 1;
+    }
+
+    #pauseButton {
+      left: 20px;
+    }
+
+    #themeButton {
+      right: 20px;
     }
 
     #pauseDialog {
@@ -74,7 +98,8 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      background: white;
+      background: var(--bg);
+      color: var(--text);
       border-radius: 16px;
       padding: 24px;
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
@@ -107,7 +132,9 @@
   <div id="timer">00:00.000</div>
   <div id="marks"></div>
   <div id="history"><strong>Histórico:</strong><br></div>
-  <button id="pauseButton" onclick="pause()">⏸</button>
+  <button id="pauseButton" onclick="pause()">Pausar</button>
+  <button id="themeButton" onclick="toggleTheme()">Dark</button>
+
   <div id="pauseDialog">
     <p>Cronômetro pausado</p>
     <button class="btn continue-btn" onclick="resumeTimer()">Continuar</button>
@@ -121,12 +148,17 @@
     const timerEl = document.getElementById("timer");
     const marksEl = document.getElementById("marks");
     const historyEl = document.getElementById("history");
+    const themeButton = document.getElementById("themeButton");
 
     function formatTime(ms) {
       const min = String(Math.floor(ms / 60000)).padStart(2, '0');
       const sec = String(Math.floor((ms % 60000) / 1000)).padStart(2, '0');
       const msStr = String(ms % 1000).padStart(3, '0');
       return `${min}:${sec}.${msStr}`;
+    }
+
+    function formatAverage(ms) {
+      return (ms / 1000).toFixed(2) + "s";
     }
 
     function updateTimer() {
@@ -136,9 +168,15 @@
 
     function updateMarksDisplay() {
       marksEl.innerHTML = "<strong>Marcações:</strong><br>";
+      let total = 0;
       marks.forEach((m, i) => {
+        total += m.diff;
         marksEl.innerHTML += `#${i + 1}: ${formatTime(m.time)}<br>+${formatTime(m.diff)}<br>`;
       });
+      if (marks.length > 1) {
+        const avg = total / (marks.length - 1);
+        marksEl.innerHTML += `<br><em>Média: ${formatAverage(avg)}</em>`;
+      }
     }
 
     function updateHistoryDisplay() {
@@ -214,6 +252,12 @@
       }
     }
 
+    function toggleTheme() {
+      document.body.classList.toggle("dark");
+      const isDark = document.body.classList.contains("dark");
+      themeButton.textContent = isDark ? "Light" : "Dark";
+    }
+
     updateHistoryDisplay();
 
     document.body.addEventListener("touchstart", () => {
@@ -227,7 +271,7 @@
     });
 
     document.body.addEventListener("click", (e) => {
-      if (e.target.closest("#pauseDialog") || e.target.id === "pauseButton") return;
+      if (e.target.closest("#pauseDialog") || e.target.id === "pauseButton" || e.target.id === "themeButton") return;
 
       if (!isRunning) {
         startTimer();
