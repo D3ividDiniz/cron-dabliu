@@ -1,335 +1,621 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Cronômetro</title>
-  <style>
-    :root {
-      --bg: #f8f8f8;
-      --text: #222;
-      --card: rgba(0, 0, 0, 0.05);
-      --button-bg: #000;
-      --button-text: #fff;
-      --highlight: #555;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cronômetro de Estudo Avançado</title>
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.15);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            --border-radius: 16px;
+            --text-color: #f0f0f0;
+            --primary-accent: #007aff;
+        }
 
-    .dark {
-      --bg: #111;
-      --text: #f2f2f2;
-      --card: rgba(255, 255, 255, 0.08);
-      --button-bg: #fff;
-      --button-text: #000;
-      --highlight: #ccc;
-    }
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;400;700&display=swap');
 
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      background-color: var(--bg);
-      color: var(--text);
-      font-family: sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-    }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    #timer {
-      font-size: 16vw;
-      font-weight: 600;
-      margin-bottom: 20px;
-    }
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(45deg, #28313B, #485461);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            min-height: 100vh;
+        }
 
-    #ms {
-      font-size: 5vw;
-      vertical-align: super;
-      margin-left: 5px;
-    }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 800px;
+            gap: 2rem;
+        }
 
-    #averageStats {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      font-size: 3.5vw;
-      color: var(--highlight);
-    }
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: var(--border-radius);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--shadow);
+            padding: 1.5rem;
+            width: 100%;
+        }
+        
+        #main-stopwatch-panel {
+            text-align: center;
+        }
 
-    #marks {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      background: var(--card);
-      padding: 6px 8px;
-      border-radius: 6px;
-      font-size: 3vw;
-      max-height: 38vh;
-      overflow-y: auto;
-      min-width: 90px;
-    }
+        #time-display {
+            font-size: 6rem;
+            font-weight: 300;
+            cursor: pointer;
+            user-select: none;
+            transition: transform 0.1s ease;
+        }
+        
+        #time-display:active {
+            transform: scale(0.98);
+        }
 
-    #history {
-      position: absolute;
-      bottom: 60px;
-      left: 10px;
-      background: var(--card);
-      padding: 6px 8px;
-      border-radius: 6px;
-      font-size: 2.6vw;
-      max-height: 26vh;
-      overflow-y: auto;
-      min-width: 110px;
-    }
+        #time-display #milliseconds {
+            font-size: 2rem;
+            font-weight: 100;
+            color: #ccc;
+            margin-left: 0.5rem;
+        }
 
-    .history-entry {
-      cursor: pointer;
-      margin-bottom: 6px;
-    }
+        #controls {
+            margin-top: 1rem;
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+        }
 
-    .hidden-marks {
-      display: none;
-      margin-left: 10px;
-    }
+        .btn {
+            font-family: 'Roboto', sans-serif;
+            font-size: 1rem;
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-color);
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+        }
+        
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
 
-    #pauseButton, #themeButton, #clearButton {
-      position: fixed;
-      bottom: 10px;
-      font-size: 3.5vw;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 20px;
-      cursor: pointer;
-      opacity: 0.9;
-      background: var(--button-bg);
-      color: var(--button-text);
-    }
+        .btn:active {
+            transform: translateY(0);
+        }
 
-    #pauseButton {
-      left: 50%;
-      transform: translateX(-50%);
-    }
+        .btn.primary {
+            background-color: var(--primary-accent);
+            border: 1px solid rgba(0, 122, 255, 0.5);
+        }
 
-    #themeButton {
-      right: 10px;
-    }
+        .btn.danger {
+            background-color: #dc3545;
+             border: 1px solid rgba(220, 53, 69, 0.5);
+        }
 
-    #clearButton {
-      left: 10px;
-    }
+        .hidden {
+            display: none !important;
+        }
 
-    #pauseDialog {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: var(--bg);
-      color: var(--text);
-      border-radius: 16px;
-      padding: 24px;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-      z-index: 10;
-      display: none;
-      text-align: center;
-    }
+        #top-right-panel {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            width: 280px;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        
+        @media (max-width: 1200px) {
+            #top-right-panel {
+                position: static;
+                width: 100%;
+                order: -1; /* Move it before the main panel */
+            }
+        }
 
-    .btn {
-      margin: 10px;
-      padding: 10px 18px;
-      font-size: 4vw;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-    }
+        .panel-section h3 {
+            font-weight: 400;
+            margin-bottom: 0.8rem;
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 0.5rem;
+        }
 
-    .continue-btn {
-      background-color: #0a84ff;
-      color: white;
-    }
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.8rem;
+            font-size: 0.9rem;
+        }
 
-    .delete-btn {
-      background-color: #ff3b30;
-      color: white;
-    }
-  </style>
+        .metrics-grid span {
+            font-weight: 700;
+            color: #fff;
+        }
+        
+        #laps-list {
+            list-style-type: none;
+            max-height: 200px;
+            overflow-y: auto;
+            padding-right: 10px; /* for scrollbar */
+        }
+
+        #laps-list li {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.4rem 0;
+            font-size: 0.95rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        #laps-list li:last-child {
+            border-bottom: none;
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--glass-border);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        #history-panel h2 {
+            font-weight: 400;
+            margin-bottom: 1rem;
+        }
+        
+        #history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        #history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .history-item {
+            background: var(--glass-bg);
+            border-radius: var(--border-radius);
+            border: 1px solid var(--glass-border);
+            padding: 1rem 1.5rem;
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            align-items: center;
+            gap: 1rem;
+            transition: background 0.2s ease;
+        }
+        
+        .history-item:hover {
+             background: rgba(255, 255, 255, 0.25);
+        }
+
+        .history-info {
+            cursor: pointer;
+        }
+
+        .history-info .name {
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+        
+        .history-info .time {
+            font-size: 0.9rem;
+            color: #ddd;
+        }
+        
+        .history-details {
+            display: none;
+            grid-column: 1 / -1; /* Span all columns */
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--glass-border);
+        }
+        
+        .history-details.visible {
+            display: block;
+        }
+
+        .history-item-laps {
+            list-style-position: inside;
+            padding-left: 0.5rem;
+        }
+
+        .history-controls .btn {
+            padding: 0.5rem;
+            line-height: 0;
+            background: transparent;
+        }
+        
+        .history-controls .btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+    </style>
 </head>
 <body>
-  <div id="timer">00:00:00<span id="ms">.000</span></div>
-  <div id="averageStats"></div>
-  <div id="marks"></div>
-  <div id="history"><strong>Histórico:</strong><br></div>
 
-  <button id="pauseButton" onclick="pause()">Pausar</button>
-  <button id="themeButton" onclick="toggleTheme()">Dark</button>
-  <button id="clearButton" onclick="clearHistory()">🗑 Limpar histórico</button>
+    <div class="container">
+        <div id="top-right-panel" class="glass-panel">
+            <div id="metrics-panel" class="panel-section">
+                <h3>Métricas da Sessão</h3>
+                <div class="metrics-grid">
+                    <div>Questões: <span id="metric-laps">0</span></div>
+                    <div>Melhor Tempo: <span id="metric-best">--:--:--</span></div>
+                    <div>Tempo Médio: <span id="metric-avg">--:--:--</span></div>
+                    <div>Pior Tempo: <span id="metric-worst">--:--:--</span></div>
+                </div>
+            </div>
+            <div id="laps-panel" class="panel-section">
+                <h3>Marcações</h3>
+                <ul id="laps-list">
+                    </ul>
+            </div>
+        </div>
 
-  <div id="pauseDialog">
-    <p>Cronômetro pausado</p>
-    <button class="btn continue-btn" onclick="resumeTimer()">Continuar</button>
-    <button class="btn delete-btn" onclick="deleteTimer()">Excluir</button>
-  </div>
+        <div id="main-stopwatch-panel" class="glass-panel">
+            <div id="time-display">
+                <span id="main-time">00:00:00</span><span id="milliseconds">.000</span>
+            </div>
+            <div id="controls">
+                <button id="start-btn" class="btn primary">Iniciar</button>
+                <button id="pause-btn" class="btn hidden">Pausar</button>
+                <button id="resume-btn" class="btn primary hidden">Retomar</button>
+                <button id="save-btn" class="btn hidden">Finalizar e Salvar</button>
+            </div>
+        </div>
+        
+        <div id="history-panel" class="glass-panel">
+            <div id="history-header">
+                <h2>Histórico de Sessões</h2>
+                <button id="clear-history-btn" class="btn danger">Limpar Histórico</button>
+            </div>
+            <div id="history-list">
+                </div>
+        </div>
+    </div>
 
-  <script>
-    let startTime, isRunning = false, interval, marks = [], lastMarkTime = null, currentSession, history = JSON.parse(localStorage.getItem("history") || "[]");
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Elementos da UI
+            const timeDisplay = document.getElementById('main-time');
+            const millisecondsDisplay = document.getElementById('milliseconds');
+            const timeDisplayContainer = document.getElementById('time-display');
 
-    const timerEl = document.getElementById("timer");
-    const msEl = document.getElementById("ms");
-    const marksEl = document.getElementById("marks");
-    const historyEl = document.getElementById("history");
-    const averageStatsEl = document.getElementById("averageStats");
+            const startBtn = document.getElementById('start-btn');
+            const pauseBtn = document.getElementById('pause-btn');
+            const resumeBtn = document.getElementById('resume-btn');
+            const saveBtn = document.getElementById('save-btn');
+            
+            const lapsList = document.getElementById('laps-list');
+            const historyList = document.getElementById('history-list');
+            const clearHistoryBtn = document.getElementById('clear-history-btn');
 
-    function formatTime(ms, withMs = true) {
-      const totalSeconds = Math.floor(ms / 1000);
-      const hrs = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
-      const min = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
-      const sec = String(totalSeconds % 60).padStart(2, '0');
-      const milli = String(ms % 1000).padStart(3, '0');
-      return withMs ? `${hrs}:${min}:${sec}<span id="ms">.${milli}</span>` : `${hrs}:${min}:${sec}`;
-    }
+            const metricLaps = document.getElementById('metric-laps');
+            const metricAvg = document.getElementById('metric-avg');
+            const metricBest = document.getElementById('metric-best');
+            const metricWorst = document.getElementById('metric-worst');
 
-    function updateTimer() {
-      const now = Date.now();
-      const diff = now - startTime;
-      timerEl.innerHTML = formatTime(diff);
-    }
+            // Estado do Cronômetro
+            let timerInterval = null;
+            let startTime = 0;
+            let elapsedTime = 0;
+            let paused = true;
+            let currentSessionId = null;
 
-    function updateMarksDisplay() {
-      marksEl.innerHTML = "<strong>Marcações:</strong><br>";
-      let total = 0, max = 0, min = Infinity;
+            // Dados da Sessão Atual
+            let laps = [];
+            let lapStartTime = 0;
 
-      [...marks].reverse().forEach((m, i) => {
-        if (i > 0) {
-          total += m.diff;
-          max = Math.max(max, m.diff);
-          min = Math.min(min, m.diff);
-        }
-        marksEl.innerHTML += `#${marks.length - i}: ${formatTime(m.time, false)}<br>${i > 0 ? '+' + formatTime(m.diff, false) : ''}<br>`;
-      });
+            // --- Funções Principais do Cronômetro ---
 
-      if (marks.length > 1) {
-        const avg = total / (marks.length - 1);
-        averageStatsEl.innerHTML = `Média: ${formatTime(avg, false)}<br>Maior: ${formatTime(max, false)}<br>Menor: ${formatTime(min, false)}`;
-      } else {
-        averageStatsEl.innerHTML = "";
-      }
-    }
+            function startTimer() {
+                if (paused) {
+                    paused = false;
+                    startTime = Date.now() - elapsedTime;
+                    lapStartTime = startTime;
+                    timerInterval = setInterval(updateTime, 10); // Atualiza a cada 10ms
+                    updateButtonState();
+                }
+            }
 
-    function updateHistoryDisplay() {
-      historyEl.innerHTML = "<strong>Histórico:</strong><br>";
-      history.forEach((s, i) => {
-        const entry = document.createElement("div");
-        entry.className = "history-entry";
-        entry.innerHTML = `⏱ ${s.date}`;
-        entry.onclick = () => {
-          const confirmRestore = confirm("Deseja restaurar este histórico?");
-          if (confirmRestore) restoreSession(s);
-          else {
-            const details = entry.querySelector(".hidden-marks");
-            if (details) details.style.display = details.style.display === "none" ? "block" : "none";
-          }
-        };
+            function pauseTimer() {
+                if (!paused) {
+                    paused = true;
+                    clearInterval(timerInterval);
+                    elapsedTime = Date.now() - startTime;
+                    updateButtonState();
+                }
+            }
+            
+            function resumeTimer() {
+                startTimer();
+            }
 
-        const markDetails = document.createElement("div");
-        markDetails.className = "hidden-marks";
-        s.marks.forEach((m, j) => {
-          markDetails.innerHTML += `&nbsp;&nbsp;#${j + 1}: ${formatTime(m.time, false)}<br>`;
+            function resetTimer() {
+                paused = true;
+                clearInterval(timerInterval);
+                timerInterval = null;
+                startTime = 0;
+                elapsedTime = 0;
+                laps = [];
+                currentSessionId = null;
+                lapStartTime = 0;
+                
+                updateDisplay();
+                updateLapsList();
+                updateMetrics();
+                updateButtonState();
+            }
+            
+            function finalizeAndSave() {
+                pauseTimer();
+                const sessionName = prompt("Digite um nome para esta sessão de estudo:", `Sessão de ${new Date().toLocaleDateString()}`);
+                if (sessionName) {
+                    saveSession(sessionName);
+                    resetTimer();
+                }
+            }
+
+            // --- Funções de Atualização da UI ---
+
+            function updateTime() {
+                elapsedTime = Date.now() - startTime;
+                updateDisplay();
+            }
+
+            function updateDisplay() {
+                const formatted = formatMilliseconds(elapsedTime);
+                timeDisplay.textContent = formatted.time;
+                millisecondsDisplay.textContent = formatted.ms;
+            }
+            
+            function updateButtonState() {
+                startBtn.classList.toggle('hidden', !paused || elapsedTime > 0);
+                pauseBtn.classList.toggle('hidden', paused);
+                resumeBtn.classList.toggle('hidden', !paused || elapsedTime === 0);
+                saveBtn.classList.toggle('hidden', paused || elapsedTime === 0);
+                
+                // Caso especial ao carregar do histórico
+                 if (currentSessionId && paused && elapsedTime > 0) {
+                    startBtn.classList.add('hidden');
+                    resumeBtn.classList.remove('hidden');
+                }
+            }
+            
+            function formatMilliseconds(ms) {
+                let totalSeconds = Math.floor(ms / 1000);
+                let hours = Math.floor(totalSeconds / 3600);
+                let minutes = Math.floor((totalSeconds % 3600) / 60);
+                let seconds = totalSeconds % 60;
+                let milliseconds = Math.floor((ms % 1000) / 10);
+
+                return {
+                    time: `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`,
+                    ms: `.${String(milliseconds).padStart(2, '0')}`
+                };
+            }
+            
+            function formatForMetrics(ms) {
+                if (ms === 0 || ms === Infinity || isNaN(ms)) return '--:--:--';
+                let totalSeconds = Math.floor(ms / 1000);
+                let hours = Math.floor(totalSeconds / 3600);
+                let minutes = Math.floor((totalSeconds % 3600) / 60);
+                let seconds = totalSeconds % 60;
+                return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            }
+
+            // --- Funções de Marcação (Lap) e Métricas ---
+
+            function addLap() {
+                if (paused) return;
+                
+                const now = Date.now();
+                const lastLapTime = laps.reduce((sum, lap) => sum + lap, 0);
+                const currentLapTime = elapsedTime - lastLapTime;
+
+                laps.push(currentLapTime);
+                
+                updateLapsList();
+                updateMetrics();
+            }
+
+            function updateLapsList() {
+                lapsList.innerHTML = '';
+                laps.forEach((lap, index) => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<span>Marcação ${index + 1}</span><span>${formatForMetrics(lap)}</span>`;
+                    lapsList.prepend(li); // Adiciona no topo
+                });
+            }
+
+            function updateMetrics() {
+                metricLaps.textContent = laps.length;
+
+                if (laps.length > 0) {
+                    const totalLapTime = laps.reduce((sum, lap) => sum + lap, 0);
+                    metricAvg.textContent = formatForMetrics(totalLapTime / laps.length);
+                    metricBest.textContent = formatForMetrics(Math.min(...laps));
+                    metricWorst.textContent = formatForMetrics(Math.max(...laps));
+                } else {
+                    metricAvg.textContent = '--:--:--';
+                    metricBest.textContent = '--:--:--';
+                    metricWorst.textContent = '--:--:--';
+                }
+            }
+
+            // --- Funções de Histórico e Persistência ---
+
+            function getHistory() {
+                return JSON.parse(localStorage.getItem('studyHistory')) || [];
+            }
+            
+            function saveHistory(history) {
+                localStorage.setItem('studyHistory', JSON.stringify(history));
+            }
+            
+            function saveSession(name) {
+                let history = getHistory();
+
+                if (currentSessionId) { // Atualizando sessão existente
+                    const sessionIndex = history.findIndex(s => s.id === currentSessionId);
+                    if (sessionIndex > -1) {
+                        history[sessionIndex].name = name;
+                        history[sessionIndex].totalTime = elapsedTime;
+                        history[sessionIndex].laps = laps;
+                    }
+                } else { // Criando nova sessão
+                    const newSession = {
+                        id: Date.now(),
+                        name: name,
+                        totalTime: elapsedTime,
+                        laps: laps
+                    };
+                    history.push(newSession);
+                }
+                
+                saveHistory(history);
+                renderHistory();
+            }
+
+            function deleteSession(id) {
+                if (confirm('Tem certeza que deseja excluir esta sessão?')) {
+                    let history = getHistory();
+                    history = history.filter(session => session.id !== id);
+                    saveHistory(history);
+                    renderHistory();
+                }
+            }
+
+            function clearHistory() {
+                 if (confirm('Tem certeza que deseja excluir TODO o histórico? Esta ação não pode ser desfeita.')) {
+                    saveHistory([]);
+                    renderHistory();
+                }
+            }
+            
+            function continueSession(id) {
+                const history = getHistory();
+                const session = history.find(s => s.id === id);
+                if (session) {
+                    resetTimer(); // Garante um estado limpo antes de carregar
+                    
+                    currentSessionId = session.id;
+                    elapsedTime = session.totalTime;
+                    laps = session.laps;
+                    paused = true;
+                    
+                    updateDisplay();
+                    updateLapsList();
+                    updateMetrics();
+                    updateButtonState();
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+            }
+
+            function renderHistory() {
+                historyList.innerHTML = '';
+                const history = getHistory();
+                history.sort((a, b) => b.id - a.id); // Mais recente primeiro
+
+                if (history.length === 0) {
+                    historyList.innerHTML = '<p>Nenhuma sessão salva ainda.</p>';
+                    return;
+                }
+
+                history.forEach(session => {
+                    const item = document.createElement('div');
+                    item.className = 'history-item';
+                    item.innerHTML = `
+                        <div class="history-info">
+                            <div class="name">${session.name}</div>
+                            <div class="time">Tempo Total: ${formatForMetrics(session.totalTime)} | Questões: ${session.laps.length}</div>
+                        </div>
+                        <div class="history-controls">
+                            <button class="btn continue-btn" title="Continuar Sessão">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                            </button>
+                            <button class="btn delete-btn" title="Excluir Sessão">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                            </button>
+                        </div>
+                        <div class="history-details">
+                            <h4>Detalhes da Sessão:</h4>
+                            <p><strong>Tempo Médio por Questão:</strong> ${formatForMetrics(session.laps.reduce((a,b)=>a+b,0) / (session.laps.length || 1))}</p>
+                            <p><strong>Melhor Tempo:</strong> ${formatForMetrics(session.laps.length > 0 ? Math.min(...session.laps) : 0)}</p>
+                            <p><strong>Pior Tempo:</strong> ${formatForMetrics(session.laps.length > 0 ? Math.max(...session.laps) : 0)}</p>
+                            <br>
+                            <strong>Marcações:</strong>
+                            <ol class="history-item-laps">
+                                ${session.laps.map((lap, i) => `<li>Marcação ${i+1}: ${formatForMetrics(lap)}</li>`).join('') || '<li>Nenhuma marcação registrada.</li>'}
+                            </ol>
+                        </div>
+                    `;
+
+                    item.querySelector('.continue-btn').addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        continueSession(session.id);
+                    });
+                    
+                    item.querySelector('.delete-btn').addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        deleteSession(session.id);
+                    });
+                    
+                    item.querySelector('.history-info').addEventListener('click', () => {
+                        item.querySelector('.history-details').classList.toggle('visible');
+                    });
+                    
+                    historyList.appendChild(item);
+                });
+            }
+
+            // --- Event Listeners Iniciais ---
+            startBtn.addEventListener('click', startTimer);
+            pauseBtn.addEventListener('click', pauseTimer);
+            resumeBtn.addEventListener('click', resumeTimer);
+            saveBtn.addEventListener('click', finalizeAndSave);
+            timeDisplayContainer.addEventListener('click', addLap);
+            clearHistoryBtn.addEventListener('click', clearHistory);
+
+            // --- Inicialização ---
+            resetTimer();
+            renderHistory();
         });
-
-        entry.appendChild(markDetails);
-        historyEl.appendChild(entry);
-      });
-    }
-
-    function startTimer() {
-      startTime = Date.now();
-      isRunning = true;
-      marks = [];
-      lastMarkTime = null;
-      interval = setInterval(updateTimer, 50);
-      currentSession = { date: new Date().toLocaleString(), marks: [] };
-    }
-
-    function recordMark() {
-      const now = Date.now();
-      const elapsed = now - startTime;
-      const diff = lastMarkTime !== null ? elapsed - lastMarkTime : 0;
-      lastMarkTime = elapsed;
-      const mark = { time: elapsed, diff };
-      marks.push(mark);
-      currentSession.marks.push(mark);
-      updateMarksDisplay();
-    }
-
-    function stopTimer() {
-      isRunning = false;
-      clearInterval(interval);
-    }
-
-    function pause() {
-      if (isRunning) {
-        stopTimer();
-        document.getElementById("pauseDialog").style.display = "block";
-        saveToHistory();
-      }
-    }
-
-    function resumeTimer() {
-      document.getElementById("pauseDialog").style.display = "none";
-      startTime = Date.now() - lastMarkTime;
-      isRunning = true;
-      interval = setInterval(updateTimer, 50);
-    }
-
-    function deleteTimer() {
-      stopTimer();
-      document.getElementById("pauseDialog").style.display = "none";
-      timerEl.innerHTML = "00:00:00<span id='ms'>.000</span>";
-      marksEl.innerHTML = "";
-      averageStatsEl.innerHTML = "";
-      currentSession = null;
-    }
-
-    function saveToHistory() {
-      if (currentSession) {
-        history.push(currentSession);
-        localStorage.setItem("history", JSON.stringify(history));
-        updateHistoryDisplay();
-      }
-    }
-
-    function restoreSession(session) {
-      deleteTimer();
-      startTime = Date.now();
-      isRunning = true;
-      lastMarkTime = session.marks[session.marks.length - 1]?.time || 0;
-      interval = setInterval(updateTimer, 50);
-      marks = [...session.marks];
-      currentSession = { ...session };
-      updateMarksDisplay();
-    }
-
-    function clearHistory() {
-      localStorage.removeItem("history");
-      history = [];
-      updateHistoryDisplay();
-    }
-
-    function toggleTheme() {
-      document.body.classList.toggle("dark");
-      themeButton.textContent = document.body.classList.contains("dark") ? "Light" : "Dark";
-    }
-
-    updateHistoryDisplay();
-
-    document.body.addEventListener("click", (e) => {
-      const t = e.target;
-      if (t.closest("#pauseDialog") || ["pauseButton", "themeButton", "clearButton"].includes(t.id) || t.closest("#history") || t.closest("#marks") || t.closest("#averageStats")) return;
-
-      if (t.id === "timer" || t.closest("#timer")) {
-        if (!isRunning) startTimer();
-        else recordMark();
-      }
-    });
-  </script>
+    </script>
 </body>
 </html>
