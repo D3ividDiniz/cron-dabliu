@@ -6,12 +6,34 @@
     <title>Cronômetro de Estudo Avançado</title>
     <style>
         :root {
+            /* Tema Escuro (Padrão) */
+            --bg-gradient: linear-gradient(45deg, #28313B, #485461);
+            --text-color: #f0f0f0;
+            --text-color-muted: #a0a0a0;
             --glass-bg: rgba(255, 255, 255, 0.15);
             --glass-border: rgba(255, 255, 255, 0.2);
             --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
             --border-radius: 16px;
-            --text-color: #f0f0f0;
             --primary-accent: #007aff;
+            --primary-accent-border: rgba(0, 122, 255, 0.5);
+            --danger-accent: #dc3545;
+            --danger-accent-border: rgba(220, 53, 69, 0.5);
+            --icon-color: #f0f0f0;
+        }
+
+        body.light-mode {
+            /* Tema Claro */
+            --bg-gradient: linear-gradient(45deg, #e9eef2, #f5f7f9);
+            --text-color: #2c3e50;
+            --text-color-muted: #7f8c8d;
+            --glass-bg: rgba(255, 255, 255, 0.6);
+            --glass-border: rgba(0, 0, 0, 0.1);
+            --shadow: 0 8px 32px 0 rgba(100, 100, 100, 0.2);
+            --primary-accent: #007aff;
+            --primary-accent-border: rgba(0, 122, 255, 0.5);
+            --danger-accent: #e74c3c;
+            --danger-accent-border: rgba(231, 76, 60, 0.5);
+            --icon-color: #2c3e50;
         }
 
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;400;700&display=swap');
@@ -21,16 +43,21 @@
             padding: 0;
             box-sizing: border-box;
         }
+        
+        html {
+            height: 100%;
+        }
 
         body {
             font-family: 'Roboto', sans-serif;
-            background: linear-gradient(45deg, #28313B, #485461);
+            background: var(--bg-gradient);
             color: var(--text-color);
             display: flex;
             flex-direction: column;
             align-items: center;
             padding: 2rem;
-            min-height: 100vh;
+            min-height: 100%;
+            transition: background 0.3s ease, color 0.3s ease;
         }
 
         .container {
@@ -51,6 +78,7 @@
             box-shadow: var(--shadow);
             padding: 1.5rem;
             width: 100%;
+            transition: background 0.3s ease, border 0.3s ease;
         }
         
         #main-stopwatch-panel {
@@ -72,7 +100,7 @@
         #time-display #milliseconds {
             font-size: 2rem;
             font-weight: 100;
-            color: #ccc;
+            color: var(--text-color-muted);
             margin-left: 0.5rem;
         }
 
@@ -100,6 +128,10 @@
             background: rgba(255, 255, 255, 0.3);
             transform: translateY(-2px);
         }
+        
+        body.light-mode .btn:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
 
         .btn:active {
             transform: translateY(0);
@@ -107,12 +139,12 @@
 
         .btn.primary {
             background-color: var(--primary-accent);
-            border: 1px solid rgba(0, 122, 255, 0.5);
+            border: 1px solid var(--primary-accent-border);
         }
 
         .btn.danger {
-            background-color: #dc3545;
-             border: 1px solid rgba(220, 53, 69, 0.5);
+            background-color: var(--danger-accent);
+            border: 1px solid var(--danger-accent-border);
         }
 
         .hidden {
@@ -123,20 +155,12 @@
             position: fixed;
             top: 2rem;
             right: 2rem;
-            width: 280px;
+            width: 320px; /* Increased width for new layout */
             display: flex;
             flex-direction: column;
             gap: 1.5rem;
         }
         
-        @media (max-width: 1200px) {
-            #top-right-panel {
-                position: static;
-                width: 100%;
-                order: -1; /* Move it before the main panel */
-            }
-        }
-
         .panel-section h3 {
             font-weight: 400;
             margin-bottom: 0.8rem;
@@ -144,16 +168,39 @@
             padding-bottom: 0.5rem;
         }
 
+        /* Novo estilo para Métricas */
         .metrics-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 0.8rem;
-            font-size: 0.9rem;
+            gap: 1rem;
         }
 
-        .metrics-grid span {
+        .metric-card {
+            background: rgba(0,0,0,0.1);
+            padding: 0.75rem;
+            border-radius: 12px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        body.light-mode .metric-card {
+             background: rgba(0,0,0,0.03);
+        }
+
+        .metric-label {
+            font-size: 0.8rem;
+            font-weight: 400;
+            color: var(--text-color-muted);
+            margin-bottom: 0.25rem;
+        }
+
+        .metric-value {
+            font-size: 1.1rem; /* Adjusted for better fit */
             font-weight: 700;
-            color: #fff;
+            color: var(--text-color);
+            line-height: 1.2;
         }
         
         #laps-list {
@@ -174,32 +221,23 @@
         #laps-list li:last-child {
             border-bottom: none;
         }
-
-        /* Scrollbar styling */
-        ::-webkit-scrollbar {
-            width: 5px;
-        }
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: var(--glass-border);
-            border-radius: 10px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.5);
-        }
-
-        #history-panel h2 {
-            font-weight: 400;
-            margin-bottom: 1rem;
-        }
         
+        #history-panel {
+             margin-top: 1rem;
+        }
+
         #history-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 1rem;
             margin-bottom: 1rem;
+        }
+        
+        #history-header h2 {
+            font-weight: 400;
+            margin: 0;
+            flex-grow: 1;
         }
 
         #history-list {
@@ -214,17 +252,22 @@
             border: 1px solid var(--glass-border);
             padding: 1rem 1.5rem;
             display: grid;
-            grid-template-columns: 1fr auto auto;
+            grid-template-columns: 1fr auto;
             align-items: center;
             gap: 1rem;
             transition: background 0.2s ease;
         }
         
         .history-item:hover {
-             background: rgba(255, 255, 255, 0.25);
+            background: rgba(255, 255, 255, 0.25);
+        }
+        
+        body.light-mode .history-item:hover {
+            background: rgba(255, 255, 255, 0.8);
         }
 
-        .history-info {
+        .history-info-wrapper {
+            grid-column: 1 / 2;
             cursor: pointer;
         }
 
@@ -235,7 +278,7 @@
         
         .history-info .time {
             font-size: 0.9rem;
-            color: #ddd;
+            color: var(--text-color-muted);
         }
         
         .history-details {
@@ -255,14 +298,77 @@
             padding-left: 0.5rem;
         }
 
-        .history-controls .btn {
+        .history-controls {
+            grid-column: 2 / 3;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .history-controls .btn, #theme-toggle-btn {
             padding: 0.5rem;
             line-height: 0;
             background: transparent;
+            border: none;
         }
         
-        .history-controls .btn:hover {
+        .history-controls .btn:hover, #theme-toggle-btn:hover {
             background: rgba(255,255,255,0.2);
+        }
+        
+        .history-controls .btn svg, #theme-toggle-btn svg {
+            stroke: var(--icon-color);
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--glass-border);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+        
+        /* --- Media Queries para Responsividade --- */
+        @media (max-width: 1200px) {
+            #top-right-panel {
+                position: static;
+                width: 100%;
+                order: -1; /* Move it before the main panel */
+            }
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 1rem;
+            }
+            .glass-panel {
+                padding: 1rem;
+            }
+            #time-display {
+                font-size: 3.5rem; /* Reduz tamanho em telas pequenas */
+            }
+            #time-display #milliseconds {
+                font-size: 1.5rem;
+            }
+            .btn {
+                padding: 0.8rem 1rem;
+                font-size: 0.9rem;
+            }
+             .history-item {
+                grid-template-columns: 1fr;
+            }
+            .history-info-wrapper, .history-controls {
+                grid-column: 1 / -1;
+            }
+            .history-controls {
+                justify-content: flex-end;
+            }
         }
 
     </style>
@@ -274,22 +380,33 @@
             <div id="metrics-panel" class="panel-section">
                 <h3>Métricas da Sessão</h3>
                 <div class="metrics-grid">
-                    <div>Questões: <span id="metric-laps">0</span></div>
-                    <div>Melhor Tempo: <span id="metric-best">--:--:--</span></div>
-                    <div>Tempo Médio: <span id="metric-avg">--:--:--</span></div>
-                    <div>Pior Tempo: <span id="metric-worst">--:--:--</span></div>
+                    <div class="metric-card">
+                        <div class="metric-label">Questões</div>
+                        <div id="metric-laps" class="metric-value">0</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Tempo Médio</div>
+                        <div id="metric-avg" class="metric-value">--:--:--</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Melhor Tempo</div>
+                        <div id="metric-best" class="metric-value">--:--:--</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Pior Tempo</div>
+                        <div id="metric-worst" class="metric-value">--:--:--</div>
+                    </div>
                 </div>
             </div>
             <div id="laps-panel" class="panel-section">
                 <h3>Marcações</h3>
-                <ul id="laps-list">
-                    </ul>
+                <ul id="laps-list"></ul>
             </div>
         </div>
 
         <div id="main-stopwatch-panel" class="glass-panel">
             <div id="time-display">
-                <span id="main-time">00:00:00</span><span id="milliseconds">.000</span>
+                <span id="main-time">00:00:00</span><span id="milliseconds">.00</span>
             </div>
             <div id="controls">
                 <button id="start-btn" class="btn primary">Iniciar</button>
@@ -301,11 +418,14 @@
         
         <div id="history-panel" class="glass-panel">
             <div id="history-header">
-                <h2>Histórico de Sessões</h2>
+                <h2>Histórico</h2>
+                <button id="theme-toggle-btn" class="btn" title="Alternar Tema">
+                    <svg id="theme-icon-sun" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-sun hidden"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                    <svg id="theme-icon-moon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-moon"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                </button>
                 <button id="clear-history-btn" class="btn danger">Limpar Histórico</button>
             </div>
-            <div id="history-list">
-                </div>
+            <div id="history-list"></div>
         </div>
     </div>
 
@@ -330,6 +450,10 @@
             const metricBest = document.getElementById('metric-best');
             const metricWorst = document.getElementById('metric-worst');
 
+            const themeToggleBtn = document.getElementById('theme-toggle-btn');
+            const themeIconSun = document.getElementById('theme-icon-sun');
+            const themeIconMoon = document.getElementById('theme-icon-moon');
+
             // Estado do Cronômetro
             let timerInterval = null;
             let startTime = 0;
@@ -339,7 +463,30 @@
 
             // Dados da Sessão Atual
             let laps = [];
-            let lapStartTime = 0;
+
+            // --- Funções de Tema ---
+            function setTheme(theme) {
+                if (theme === 'light') {
+                    document.body.classList.add('light-mode');
+                    themeIconSun.classList.remove('hidden');
+                    themeIconMoon.classList.add('hidden');
+                } else {
+                    document.body.classList.remove('light-mode');
+                    themeIconSun.classList.add('hidden');
+                    themeIconMoon.classList.remove('hidden');
+                }
+                localStorage.setItem('studyTimerTheme', theme);
+            }
+
+            function toggleTheme() {
+                const currentTheme = document.body.classList.contains('light-mode') ? 'light' : 'dark';
+                setTheme(currentTheme === 'dark' ? 'light' : 'dark');
+            }
+
+            function loadTheme() {
+                const preferredTheme = localStorage.getItem('studyTimerTheme') || 'dark';
+                setTheme(preferredTheme);
+            }
 
             // --- Funções Principais do Cronômetro ---
 
@@ -347,7 +494,6 @@
                 if (paused) {
                     paused = false;
                     startTime = Date.now() - elapsedTime;
-                    lapStartTime = startTime;
                     timerInterval = setInterval(updateTime, 10); // Atualiza a cada 10ms
                     updateButtonState();
                 }
@@ -374,7 +520,6 @@
                 elapsedTime = 0;
                 laps = [];
                 currentSessionId = null;
-                lapStartTime = 0;
                 
                 updateDisplay();
                 updateLapsList();
@@ -388,6 +533,9 @@
                 if (sessionName) {
                     saveSession(sessionName);
                     resetTimer();
+                } else {
+                    // Se o usuário cancelar, permite que ele retome a sessão
+                    updateButtonState();
                 }
             }
 
@@ -405,16 +553,13 @@
             }
             
             function updateButtonState() {
-                startBtn.classList.toggle('hidden', !paused || elapsedTime > 0);
-                pauseBtn.classList.toggle('hidden', paused);
-                resumeBtn.classList.toggle('hidden', !paused || elapsedTime === 0);
-                saveBtn.classList.toggle('hidden', paused || elapsedTime === 0);
-                
-                // Caso especial ao carregar do histórico
-                 if (currentSessionId && paused && elapsedTime > 0) {
-                    startBtn.classList.add('hidden');
-                    resumeBtn.classList.remove('hidden');
-                }
+                const isRunning = !paused;
+                const hasStarted = elapsedTime > 0;
+
+                startBtn.classList.toggle('hidden', isRunning || hasStarted);
+                pauseBtn.classList.toggle('hidden', !isRunning);
+                resumeBtn.classList.toggle('hidden', isRunning || !hasStarted);
+                saveBtn.classList.toggle('hidden', isRunning || !hasStarted);
             }
             
             function formatMilliseconds(ms) {
@@ -431,7 +576,7 @@
             }
             
             function formatForMetrics(ms) {
-                if (ms === 0 || ms === Infinity || isNaN(ms)) return '--:--:--';
+                if (ms === 0 || ms === Infinity || isNaN(ms) || ms === null) return '--:--:--';
                 let totalSeconds = Math.floor(ms / 1000);
                 let hours = Math.floor(totalSeconds / 3600);
                 let minutes = Math.floor((totalSeconds % 3600) / 60);
@@ -442,13 +587,12 @@
             // --- Funções de Marcação (Lap) e Métricas ---
 
             function addLap() {
-                if (paused) return;
+                if (paused || elapsedTime === 0) return;
                 
-                const now = Date.now();
-                const lastLapTime = laps.reduce((sum, lap) => sum + lap, 0);
+                const lastLapTime = laps.reduce((sum, lap) => sum + lap.time, 0);
                 const currentLapTime = elapsedTime - lastLapTime;
 
-                laps.push(currentLapTime);
+                laps.push({ time: currentLapTime, total: elapsedTime });
                 
                 updateLapsList();
                 updateMetrics();
@@ -456,21 +600,22 @@
 
             function updateLapsList() {
                 lapsList.innerHTML = '';
-                laps.forEach((lap, index) => {
+                [...laps].reverse().forEach((lap, index) => {
                     const li = document.createElement('li');
-                    li.innerHTML = `<span>Marcação ${index + 1}</span><span>${formatForMetrics(lap)}</span>`;
-                    lapsList.prepend(li); // Adiciona no topo
+                    li.innerHTML = `<span>Marcação ${laps.length - index}</span><span>${formatForMetrics(lap.time)}</span>`;
+                    lapsList.appendChild(li); 
                 });
             }
 
             function updateMetrics() {
-                metricLaps.textContent = laps.length;
+                const lapTimes = laps.map(l => l.time);
+                metricLaps.textContent = lapTimes.length;
 
-                if (laps.length > 0) {
-                    const totalLapTime = laps.reduce((sum, lap) => sum + lap, 0);
-                    metricAvg.textContent = formatForMetrics(totalLapTime / laps.length);
-                    metricBest.textContent = formatForMetrics(Math.min(...laps));
-                    metricWorst.textContent = formatForMetrics(Math.max(...laps));
+                if (lapTimes.length > 0) {
+                    const totalLapTime = lapTimes.reduce((sum, lap) => sum + lap, 0);
+                    metricAvg.textContent = formatForMetrics(totalLapTime / lapTimes.length);
+                    metricBest.textContent = formatForMetrics(Math.min(...lapTimes));
+                    metricWorst.textContent = formatForMetrics(Math.max(...lapTimes));
                 } else {
                     metricAvg.textContent = '--:--:--';
                     metricBest.textContent = '--:--:--';
@@ -518,13 +663,17 @@
                     history = history.filter(session => session.id !== id);
                     saveHistory(history);
                     renderHistory();
+                     if (currentSessionId === id) {
+                        resetTimer();
+                    }
                 }
             }
 
             function clearHistory() {
-                 if (confirm('Tem certeza que deseja excluir TODO o histórico? Esta ação não pode ser desfeita.')) {
+                if (confirm('Tem certeza que deseja excluir TODO o histórico? Esta ação não pode ser desfeita.')) {
                     saveHistory([]);
                     renderHistory();
+                    resetTimer();
                 }
             }
             
@@ -532,11 +681,11 @@
                 const history = getHistory();
                 const session = history.find(s => s.id === id);
                 if (session) {
-                    resetTimer(); // Garante um estado limpo antes de carregar
+                    resetTimer(); 
                     
                     currentSessionId = session.id;
                     elapsedTime = session.totalTime;
-                    laps = session.laps;
+                    laps = session.laps || []; // Garante que laps seja um array
                     paused = true;
                     
                     updateDisplay();
@@ -553,17 +702,22 @@
                 history.sort((a, b) => b.id - a.id); // Mais recente primeiro
 
                 if (history.length === 0) {
-                    historyList.innerHTML = '<p>Nenhuma sessão salva ainda.</p>';
+                    historyList.innerHTML = '<p style="text-align: center; color: var(--text-color-muted);">Nenhuma sessão salva ainda.</p>';
                     return;
                 }
 
                 history.forEach(session => {
                     const item = document.createElement('div');
                     item.className = 'history-item';
+                    const sessionLaps = session.laps || [];
+                    const lapTimes = sessionLaps.map(l => l.time);
+
                     item.innerHTML = `
-                        <div class="history-info">
-                            <div class="name">${session.name}</div>
-                            <div class="time">Tempo Total: ${formatForMetrics(session.totalTime)} | Questões: ${session.laps.length}</div>
+                        <div class="history-info-wrapper">
+                            <div class="history-info">
+                                <div class="name">${session.name}</div>
+                                <div class="time">Tempo Total: ${formatForMetrics(session.totalTime)} | Questões: ${sessionLaps.length}</div>
+                            </div>
                         </div>
                         <div class="history-controls">
                             <button class="btn continue-btn" title="Continuar Sessão">
@@ -575,13 +729,13 @@
                         </div>
                         <div class="history-details">
                             <h4>Detalhes da Sessão:</h4>
-                            <p><strong>Tempo Médio por Questão:</strong> ${formatForMetrics(session.laps.reduce((a,b)=>a+b,0) / (session.laps.length || 1))}</p>
-                            <p><strong>Melhor Tempo:</strong> ${formatForMetrics(session.laps.length > 0 ? Math.min(...session.laps) : 0)}</p>
-                            <p><strong>Pior Tempo:</strong> ${formatForMetrics(session.laps.length > 0 ? Math.max(...session.laps) : 0)}</p>
+                            <p><strong>Tempo Médio por Questão:</strong> ${formatForMetrics(lapTimes.reduce((a,b)=>a+b,0) / (lapTimes.length || 1))}</p>
+                            <p><strong>Melhor Tempo:</strong> ${formatForMetrics(lapTimes.length > 0 ? Math.min(...lapTimes) : 0)}</p>
+                            <p><strong>Pior Tempo:</strong> ${formatForMetrics(lapTimes.length > 0 ? Math.max(...lapTimes) : 0)}</p>
                             <br>
                             <strong>Marcações:</strong>
                             <ol class="history-item-laps">
-                                ${session.laps.map((lap, i) => `<li>Marcação ${i+1}: ${formatForMetrics(lap)}</li>`).join('') || '<li>Nenhuma marcação registrada.</li>'}
+                                ${sessionLaps.map((lap, i) => `<li>Marcação ${i+1}: ${formatForMetrics(lap.time)}</li>`).join('') || '<li>Nenhuma marcação registrada.</li>'}
                             </ol>
                         </div>
                     `;
@@ -596,7 +750,7 @@
                         deleteSession(session.id);
                     });
                     
-                    item.querySelector('.history-info').addEventListener('click', () => {
+                    item.querySelector('.history-info-wrapper').addEventListener('click', () => {
                         item.querySelector('.history-details').classList.toggle('visible');
                     });
                     
@@ -611,8 +765,10 @@
             saveBtn.addEventListener('click', finalizeAndSave);
             timeDisplayContainer.addEventListener('click', addLap);
             clearHistoryBtn.addEventListener('click', clearHistory);
+            themeToggleBtn.addEventListener('click', toggleTheme);
 
             // --- Inicialização ---
+            loadTheme();
             resetTimer();
             renderHistory();
         });
