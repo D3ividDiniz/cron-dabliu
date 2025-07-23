@@ -3,26 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" id="theme-color-meta" content="#0f172a">
     <title>Cronômetro de Estudo Avançado</title>
     <style>
         :root {
-            /* Tema Escuro (Padrão) */
-            --bg-gradient: linear-gradient(45deg, #28313B, #485461);
-            --text-color: #f0f0f0;
-            --text-color-muted: #a0a0a0;
-            --glass-bg: rgba(255, 255, 255, 0.15);
-            --glass-border: rgba(255, 255, 255, 0.2);
-            --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            /* Tema Escuro (Novo - "Azul Meia-Noite") */
+            --bg-gradient: linear-gradient(45deg, #1e293b, #0f172a);
+            --text-color: #e2e8f0;
+            --text-color-muted: #94a3b8;
+            --glass-bg: rgba(30, 41, 59, 0.5);
+            --glass-border: rgba(71, 85, 105, 0.5);
+            --shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
             --border-radius: 16px;
-            --primary-accent: #007aff;
-            --primary-accent-border: rgba(0, 122, 255, 0.5);
-            --danger-accent: #dc3545;
-            --danger-accent-border: rgba(220, 53, 69, 0.5);
-            --icon-color: #f0f0f0;
+            --primary-accent: #0ea5e9; /* Ciano vibrante */
+            --primary-accent-border: rgba(14, 165, 233, 0.5);
+            --danger-accent: #f43f5e; /* Rosa vibrante */
+            --danger-accent-border: rgba(244, 63, 94, 0.5);
+            --icon-color: #e2e8f0;
         }
 
         body.light-mode {
-            /* Tema Claro */
+            /* Tema Claro (Mantido) */
             --bg-gradient: linear-gradient(45deg, #e9eef2, #f5f7f9);
             --text-color: #2c3e50;
             --text-color-muted: #7f8c8d;
@@ -44,8 +45,12 @@
             box-sizing: border-box;
         }
         
+        /* CSS reforçado para cobrir toda a tela em todos os dispositivos */
         html {
-            height: 100%;
+            min-height: 100%;
+            /* Fallback para vh e propriedade específica para Safari */
+            min-height: -webkit-fill-available;
+            background: var(--bg-gradient);
         }
 
         body {
@@ -56,7 +61,8 @@
             flex-direction: column;
             align-items: center;
             padding: 2rem;
-            min-height: 100%;
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
             transition: background 0.3s ease, color 0.3s ease;
         }
 
@@ -71,8 +77,8 @@
 
         .glass-panel {
             background: var(--glass-bg);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             border-radius: var(--border-radius);
             border: 1px solid var(--glass-border);
             box-shadow: var(--shadow);
@@ -120,16 +126,18 @@
             cursor: pointer;
             transition: all 0.2s ease;
             color: var(--text-color);
-            background: var(--glass-bg);
+            background: transparent;
             border: 1px solid var(--glass-border);
+            font-weight: 700;
         }
         
         .btn:hover {
-            background: rgba(255, 255, 255, 0.3);
             transform: translateY(-2px);
+            border-color: var(--primary-accent);
         }
         
         body.light-mode .btn:hover {
+            border-color: var(--primary-accent);
             background: rgba(0, 0, 0, 0.05);
         }
 
@@ -140,11 +148,13 @@
         .btn.primary {
             background-color: var(--primary-accent);
             border: 1px solid var(--primary-accent-border);
+            color: #fff;
         }
 
         .btn.danger {
             background-color: var(--danger-accent);
             border: 1px solid var(--danger-accent-border);
+            color: #fff;
         }
 
         .hidden {
@@ -155,7 +165,7 @@
             position: fixed;
             top: 2rem;
             right: 2rem;
-            width: 320px; /* Increased width for new layout */
+            width: 320px;
             display: flex;
             flex-direction: column;
             gap: 1.5rem;
@@ -168,7 +178,6 @@
             padding-bottom: 0.5rem;
         }
 
-        /* Novo estilo para Métricas */
         .metrics-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -176,13 +185,15 @@
         }
 
         .metric-card {
-            background: rgba(0,0,0,0.1);
+            background: rgba(0,0,0,0.2);
             padding: 0.75rem;
             border-radius: 12px;
             text-align: center;
             display: flex;
             flex-direction: column;
             justify-content: center;
+            border: 1px solid transparent;
+            transition: all 0.3s ease;
         }
         
         body.light-mode .metric-card {
@@ -197,7 +208,7 @@
         }
 
         .metric-value {
-            font-size: 1.1rem; /* Adjusted for better fit */
+            font-size: 1.1rem;
             font-weight: 700;
             color: var(--text-color);
             line-height: 1.2;
@@ -207,7 +218,7 @@
             list-style-type: none;
             max-height: 200px;
             overflow-y: auto;
-            padding-right: 10px; /* for scrollbar */
+            padding-right: 10px;
         }
 
         #laps-list li {
@@ -259,7 +270,7 @@
         }
         
         .history-item:hover {
-            background: rgba(255, 255, 255, 0.25);
+            background: rgba(30, 41, 59, 0.8);
         }
         
         body.light-mode .history-item:hover {
@@ -283,7 +294,7 @@
         
         .history-details {
             display: none;
-            grid-column: 1 / -1; /* Span all columns */
+            grid-column: 1 / -1;
             margin-top: 1rem;
             padding-top: 1rem;
             border-top: 1px solid var(--glass-border);
@@ -309,14 +320,21 @@
             line-height: 0;
             background: transparent;
             border: none;
+            border-radius: 50%;
         }
         
         .history-controls .btn:hover, #theme-toggle-btn:hover {
-            background: rgba(255,255,255,0.2);
+            background: rgba(14, 165, 233, 0.2);
+            border: none;
         }
         
+        body.light-mode .history-controls .btn:hover, body.light-mode #theme-toggle-btn:hover {
+             background: rgba(0, 122, 255, 0.1);
+        }
+
         .history-controls .btn svg, #theme-toggle-btn svg {
             stroke: var(--icon-color);
+            transition: all 0.3s ease;
         }
 
         /* Scrollbar styling */
@@ -331,7 +349,7 @@
             border-radius: 10px;
         }
         ::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.5);
+            background: var(--primary-accent);
         }
         
         /* --- Media Queries para Responsividade --- */
@@ -339,7 +357,7 @@
             #top-right-panel {
                 position: static;
                 width: 100%;
-                order: -1; /* Move it before the main panel */
+                order: -1;
             }
         }
         
@@ -351,7 +369,7 @@
                 padding: 1rem;
             }
             #time-display {
-                font-size: 3.5rem; /* Reduz tamanho em telas pequenas */
+                font-size: 3.5rem;
             }
             #time-display #milliseconds {
                 font-size: 1.5rem;
@@ -423,7 +441,7 @@
                     <svg id="theme-icon-sun" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-sun hidden"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
                     <svg id="theme-icon-moon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-moon"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
                 </button>
-                <button id="clear-history-btn" class="btn danger">Limpar Histórico</button>
+                <button id="clear-history-btn" class="btn danger">Limpar</button>
             </div>
             <div id="history-list"></div>
         </div>
@@ -453,6 +471,7 @@
             const themeToggleBtn = document.getElementById('theme-toggle-btn');
             const themeIconSun = document.getElementById('theme-icon-sun');
             const themeIconMoon = document.getElementById('theme-icon-moon');
+            const themeColorMeta = document.getElementById('theme-color-meta');
 
             // Estado do Cronômetro
             let timerInterval = null;
@@ -470,10 +489,14 @@
                     document.body.classList.add('light-mode');
                     themeIconSun.classList.remove('hidden');
                     themeIconMoon.classList.add('hidden');
+                    // Atualiza a cor do navegador para o tema claro
+                    themeColorMeta.setAttribute('content', '#e9eef2');
                 } else {
                     document.body.classList.remove('light-mode');
                     themeIconSun.classList.add('hidden');
                     themeIconMoon.classList.remove('hidden');
+                     // Atualiza a cor do navegador para o tema escuro
+                    themeColorMeta.setAttribute('content', '#0f172a');
                 }
                 localStorage.setItem('studyTimerTheme', theme);
             }
@@ -494,7 +517,7 @@
                 if (paused) {
                     paused = false;
                     startTime = Date.now() - elapsedTime;
-                    timerInterval = setInterval(updateTime, 10); // Atualiza a cada 10ms
+                    timerInterval = setInterval(updateTime, 10);
                     updateButtonState();
                 }
             }
@@ -529,12 +552,11 @@
             
             function finalizeAndSave() {
                 pauseTimer();
-                const sessionName = prompt("Digite um nome para esta sessão de estudo:", `Sessão de ${new Date().toLocaleDateString()}`);
+                const sessionName = prompt("Digite um nome para esta sessão de estudo:", `Sessão de ${new Date().toLocaleDateString('pt-BR')}`);
                 if (sessionName) {
                     saveSession(sessionName);
                     resetTimer();
                 } else {
-                    // Se o usuário cancelar, permite que ele retome a sessão
                     updateButtonState();
                 }
             }
@@ -636,14 +658,14 @@
             function saveSession(name) {
                 let history = getHistory();
 
-                if (currentSessionId) { // Atualizando sessão existente
+                if (currentSessionId) {
                     const sessionIndex = history.findIndex(s => s.id === currentSessionId);
                     if (sessionIndex > -1) {
                         history[sessionIndex].name = name;
                         history[sessionIndex].totalTime = elapsedTime;
                         history[sessionIndex].laps = laps;
                     }
-                } else { // Criando nova sessão
+                } else {
                     const newSession = {
                         id: Date.now(),
                         name: name,
@@ -685,7 +707,7 @@
                     
                     currentSessionId = session.id;
                     elapsedTime = session.totalTime;
-                    laps = session.laps || []; // Garante que laps seja um array
+                    laps = session.laps || [];
                     paused = true;
                     
                     updateDisplay();
@@ -699,7 +721,7 @@
             function renderHistory() {
                 historyList.innerHTML = '';
                 const history = getHistory();
-                history.sort((a, b) => b.id - a.id); // Mais recente primeiro
+                history.sort((a, b) => b.id - a.id); 
 
                 if (history.length === 0) {
                     historyList.innerHTML = '<p style="text-align: center; color: var(--text-color-muted);">Nenhuma sessão salva ainda.</p>';
